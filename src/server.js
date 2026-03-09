@@ -81,17 +81,22 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // ─── Routes ───────────────────────────────────────────────────
-app.use('/api/auth',        require('./routes/auth'));
-app.use('/api/users',       require('./routes/users'));
-app.use('/api/talents',     require('./routes/talents'));
-app.use('/api/jobs',        require('./routes/jobs'));
-app.use('/api/orders',      require('./routes/orders'));
-app.use('/api/reviews',     require('./routes/reviews'));
-app.use('/api/messages',    require('./routes/messages'));
-app.use('/api/payments',    require('./routes/payments'));
-app.use('/api/admin',       require('./routes/admin'));
-app.use('/api/upload',      require('./routes/upload'));
-app.use('/api/wishlist',    require('./routes/wishlist'));
+// Serve static frontend files
+app.use(express.static(require('path').join(__dirname, '../public')));
+
+app.use('/api/auth',          require('./routes/auth'));
+app.use('/api/users',         require('./routes/users'));
+app.use('/api/talents',       require('./routes/talents'));
+app.use('/api/jobs',          require('./routes/jobs'));
+app.use('/api/orders',        require('./routes/orders'));
+app.use('/api/reviews',       require('./routes/reviews'));
+app.use('/api/messages',      require('./routes/messages'));
+app.use('/api/payments',      require('./routes/payments'));
+app.use('/api/escrow',        require('./routes/escrow'));
+app.use('/api/chat',          require('./routes/chat'));
+app.use('/api/admin',         require('./routes/admin'));
+app.use('/api/upload',        require('./routes/upload'));
+app.use('/api/wishlist',      require('./routes/wishlist'));
 app.use('/api/notifications', require('./routes/notifications'));
 
 // ─── Health Check ─────────────────────────────────────────────
