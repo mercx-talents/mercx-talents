@@ -1,42 +1,21 @@
+require('dotenv').config();
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
-const seedAdmin = async () => {
-  try {
-    const email    = process.env.ADMIN_EMAIL;
-    const password = process.env.ADMIN_PASSWORD;
-    const name     = process.env.ADMIN_NAME || 'Admin';
-
-    if (!email || !password) {
-      console.warn('⚠️  ADMIN_EMAIL / ADMIN_PASSWORD not set in .env — skipping admin seed.');
-      return;
-    }
-
-    const existing = await User.findOne({ email });
-
-    if (existing) {
-      if (existing.role !== 'admin') {
-        existing.role = 'admin';
-        await existing.save({ validateBeforeSave: false });
-        console.log('✅ Admin role updated for:', email);
-      } else {
-        console.log('✅ Admin already exists:', email);
-      }
-      return;
-    }
-
-    await User.create({
-      name,
-      email,
-      password,          // hashed by User model pre-save hook
-      role: 'admin',
-      isVerified: true,
-      isActive: true
-    });
-
-    console.log('✅ Admin account created:', email);
-  } catch (error) {
-    console.error('❌ Admin seed error:', error.message);
+async function seedAdmin() {
+  await mongoose.connect(process.env.MONGODB_URI);
+  const email = 'sadikumar877@gmail.com';
+  const existing = await User.findOne({ email });
+  const hash = await bcrypt.hash('Mercury001', 12);
+  if (existing) {
+    existing.role = 'admin'; existing.isVerified = true; existing.password = hash;
+    await existing.save(); console.log('✅ Admin updated!');
+  } else {
+    await User.create({ name: 'Sadi Kumar', email, username: 'sadikumar', password: hash, role: 'admin', isVerified: true, country: 'NG' });
+    console.log('✅ Admin created!');
   }
-};
-
-module.exports = seedAdmin;
+  console.log('🔑 Login: sadikumar877@gmail.com / Mercury001');
+  await mongoose.disconnect(); process.exit(0);
+}
+seedAdmin().catch(e => { console.error(e); process.exit(1); });
