@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — Mercx</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; background: var(--bg); position: relative; overflow: hidden; }
+    .bg-glow { position: fixed; inset: 0; background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(239,68,68,0.12) 0%, transparent 60%); pointer-events: none; }
+    .bg-grid { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 50px 50px; pointer-events: none; }
+    .admin-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 48px; width: 100%; max-width: 420px; position: relative; animation: slideUp 0.4s ease; }
+    .admin-icon { width: 64px; height: 64px; border-radius: var(--radius-lg); background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 24px; }
+    .admin-title { text-align: center; font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
+    .admin-subtitle { text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 32px; }
+    .admin-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); padding: 4px 12px; border-radius: var(--radius-full); font-size: 0.78rem; color: var(--danger); margin: 0 auto 24px; display: flex; width: fit-content; }
+    .input-wrapper { position: relative; }
+    .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1rem; pointer-events: none; }
+    .input-wrapper .form-input { padding-left: 42px; }
+    .password-toggle { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; }
+    .error-banner { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: var(--radius); padding: 12px 16px; font-size: 0.88rem; color: var(--danger); margin-bottom: 20px; display: none; }
+    .error-banner.show { display: block; }
+    .back-link { text-align: center; margin-top: 20px; font-size: 0.88rem; color: var(--text-muted); }
+    .back-link a { color: var(--primary); }
+    .btn-admin { background: linear-gradient(135deg, #ef4444, #b91c1c); color: white; box-shadow: 0 4px 24px rgba(239,68,68,0.3); }
+    .btn-admin:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(239,68,68,0.4); color: white; }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+
+  <div class="admin-card">
+    <div class="admin-icon">🛡️</div>
+    <h2 class="admin-title">Admin Access</h2>
+    <p class="admin-subtitle">Restricted area — authorized personnel only</p>
+    <div class="admin-badge">🔴 High Security Zone</div>
+
+    <div class="error-banner" id="errorBanner"></div>
+
+    <form id="adminLoginForm">
+      <div class="form-group">
+        <label class="form-label">Admin Email</label>
+        <div class="input-wrapper">
+          <span class="input-icon">✉️</span>
+          <input type="email" class="form-input" id="email" placeholder="admin@mercx.site" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Admin Password</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔑</span>
+          <input type="password" class="form-input" id="password" placeholder="Enter admin password" required>
+          <button type="button" class="password-toggle" id="togglePwd">👁️</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-admin btn-full btn-lg" id="loginBtn">Access Admin Panel</button>
+    </form>
+    <div class="back-link"><a href="/pages/login.html">← Back to regular login</a></div>
+  </div>
+
+  <script>
+    document.getElementById('togglePwd').addEventListener('click', function() {
+      const pwd = document.getElementById('password');
+      pwd.type = pwd.type === 'password' ? 'text' : 'password';
+      this.textContent = pwd.type === 'password' ? '👁️' : '🙈';
+    });
+
+    document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const err = document.getElementById('errorBanner');
+      btn.textContent = 'Verifying...'; btn.disabled = true;
+      err.classList.remove('show');
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+        const data = await res.json();
+
+        if (data.success && data.user.role === 'admin') {
+          localStorage.setItem('accessToken', data.accessToken);
+          localStorage.setItem('user', JSON.stringify(data.user));
+          window.location.href = '/pages/admin-dashboard.html';
+        } else if (data.success && data.user.role !== 'admin') {
+          err.textContent = '🚫 Access denied. Admin privileges required.'; err.classList.add('show');
+          btn.textContent = 'Access Admin Panel'; btn.disabled = false;
+        } else {
+          err.textContent = '❌ ' + data.message; err.classList.add('show');
+          btn.textContent = 'Access Admin Panel'; btn.disabled = false;
+        }
+      } catch (e) {
+        err.textContent = '❌ Network error. Please try again.'; err.classList.add('show');
+        btn.textContent = 'Access Admin Panel'; btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
