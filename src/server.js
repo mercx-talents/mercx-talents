@@ -10,8 +10,11 @@ const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 require('dotenv').config();
 
-// Connect MongoDB
-connectDB();
+// Connect MongoDB \& seed admin
+connectDB().then(async () => {
+  const seedAdmin = require("./utils/seedAdmin");
+  await seedAdmin();
+});
 
 const app = express();
 const server = http.createServer(app);
